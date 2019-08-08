@@ -30,6 +30,24 @@ func checkExist(path string) (bool, error) {
 	return false, fmt.Errorf("failed to check if form PDF file exists: %v", err)
 }
 
+func checkFileExist(filePath string) (string, error) {
+
+	// Get the absolute paths.
+	filePath, err := absPath(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	// Check if the file exists.
+	isExist, err := checkExist(filePath)
+	if err != nil {
+		return "", err
+	}else if !isExist {
+		return "", fmt.Errorf("PDF file does not exists: '%s'", filePath)
+	}
+	return filePath, nil
+}
+
 // checkPkgExist check if the pkgName utility exists.
 func checkPkgExist(pkgName string) error {
 
