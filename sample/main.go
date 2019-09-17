@@ -13,6 +13,7 @@ func main() {
 		"reason": "Kim",
 		"headcountAddition": "Yes",
 		"directors.0": "Yo",
+		"kazekim_checkbox": "Yes",
 	}
 
 	pdfInject := pdfinject.New()

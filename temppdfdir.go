@@ -50,7 +50,7 @@ func (t *TempPDFDir) Remove() {
 	errD := os.RemoveAll(t.path)
 	// Log the error only.
 	if errD != nil {
-		log.Printf("fillpdf: failed to remove temporary directory '%s' again: %v", t.path, errD)
+		log.Printf("pdfinject: failed to remove temporary directory '%s' again: %v", t.path, errD)
 	}
 }
 
@@ -87,8 +87,8 @@ func (t *TempPDFDir) generateFdfFile(form Form, path string) error {
 	_, _ = fmt.Fprintln(w, fdfHeader)
 
 	// Write the form data.
-	for key, value := range form {
-		fmt.Fprintf(w, "<< /T (%s) /V (%v)>>\n", key, value)
+	for key, _ := range form {
+		fmt.Fprintf(w, "<< /T (%s) /V (\xfe\xff\xbd \xe01) >>\n", key)
 	}
 
 	// Write the fdf footer.

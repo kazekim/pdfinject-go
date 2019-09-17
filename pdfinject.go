@@ -67,19 +67,19 @@ func (pdf PDFInject) Fill(form Form, formPDFFile string) error {
 	}
 
 	// Create a temporary directory.
-	tmpDir, err := NewTempDir(dirPath, prefixFileName)
+	xfdf, err := NewXFDFGenerator(dirPath, prefixFileName)
 	if err != nil {
 		return err
 	}
 
 	// Remove the temporary directory on defer again.
-	defer tmpDir.Remove()
+	defer xfdf.Remove()
 
 	// Create the temporary output file path.
-	outputFile := tmpDir.CreateTempOutputFile()
+	outputFile := xfdf.CreateTempOutputFile()
 
 	// Create the fdf data file.
-	fdfFile, err := tmpDir.CreateFDFFile(form)
+	fdfFile, err := xfdf.CreateXFDFFile(form)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (pdf PDFInject) Fill(form Form, formPDFFile string) error {
 	args := pdf.createArgsTextOnly(formPDFFile, fdfFile, outputFile)
 
 	// Run PDF Injector
-	err = pdf.runInjector(tmpDir, args)
+	err = pdf.runInjector(xfdf.path, args)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (pdf PDFInject) Stamp(stampPDFFile, srcPDFFile string) error {
 	args := pdf.createArgsStampPDF(srcPDFFile, stampPDFFile, outputFile)
 
 	// Run PDF Injector
-	err = pdf.runInjector(tmpDir, args)
+	err = pdf.runInjector(tmpDir.path, args)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (pdf PDFInject) createArgsTextOnly(formPDFFile, fdfFile, outputFile string)
 		formPDFFile,
 		"fill_form", fdfFile,
 		"output", outputFile,
-		"flatten",
+		"need_appearances",
 	}
 
 	return args
@@ -194,10 +194,10 @@ func (pdf PDFInject) createArgsStampPDF(srcPDFFile, stampPDFFile, outputFile str
 }
 
 // runInjector Run the pdftk utility.
-func (pdf PDFInject) runInjector(tmpDir *TempPDFDir, args []string) error {
+func (pdf PDFInject) runInjector(tmpDir string, args []string) error {
 
 	cmd := NewShellCommand(pdfFormPkgName)
-	err := cmd.RunInPath(tmpDir.path, args...)
+	err := cmd.RunInPath(tmpDir, args...)
 	if err != nil {
 		return fmt.Errorf("pdftk error: %v", err)
 	}
