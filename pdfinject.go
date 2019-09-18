@@ -106,6 +106,21 @@ func (pdf PDFInject) FillWithDestFile(form Form, formPDFFile, destPDFFile string
 	return pdf.Fill(form, formPDFFile)
 }
 
+func (pdf PDFInject) FillModel(model interface{}, formPDFFile string) error {
+
+	form := structToForm(model)
+
+	return pdf.Fill(form, formPDFFile)
+}
+
+func (pdf PDFInject) FillModelWithDestFile(model interface{}, formPDFFile string, destPDFFile string) error {
+
+	pdf.destPDFFile = destPDFFile
+	form := structToForm(model)
+
+	return pdf.Fill(form, formPDFFile)
+}
+
 func (pdf PDFInject) Stamp(stampPDFFile, srcPDFFile string) error {
 
 	// Check if the Stamp file exists.
