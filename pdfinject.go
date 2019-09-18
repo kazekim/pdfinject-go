@@ -1,6 +1,7 @@
 package pdfinject
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -14,12 +15,14 @@ type PDFInject struct {
 	form Form
 	destPDFFile string
 	overWrite bool
+	inputType InputType
 }
 
 
 func New() PDFInject {
 	return PDFInject{
 		overWrite: true,
+		inputType: XFDF,
 	}
 }
 
@@ -27,12 +30,17 @@ func NewWithDestFile(destPDFFile string) PDFInject {
 	return PDFInject{
 		destPDFFile: destPDFFile,
 		overWrite: true,
+		inputType: XFDF,
 	}
 }
 
 // SetOverWrite allow overWrite to Destination file
 func (pdf PDFInject) SetOverWrite(canOverwrited bool) {
 	pdf.overWrite = canOverwrited
+}
+
+func (pdf PDFInject) SetInputType(in InputType) {
+	pdf.inputType = in
 }
 
 // Fill specified PDF form fields with the specified form values and export to a filled PDF file.
@@ -66,35 +74,25 @@ func (pdf PDFInject) Fill(form Form, formPDFFile string) error {
 		return err
 	}
 
-	// Create a temporary directory.
-	xfdf, err := NewXFDFGenerator(dirPath, prefixFileName)
+
+	outputFile, inputFile, tempFile, err := pdf.generateInputDataFile(form)
 	if err != nil {
 		return err
 	}
-
 	// Remove the temporary directory on defer again.
-	defer xfdf.Remove()
-
-	// Create the temporary output file path.
-	outputFile := xfdf.CreateTempOutputFile()
-
-	// Create the fdf data file.
-	fdfFile, err := xfdf.CreateXFDFFile(form)
-	if err != nil {
-		return err
-	}
+	defer tempFile.Remove()
 
 	// Create the pdftk command line arguments.
-	args := pdf.createArgsTextOnly(formPDFFile, fdfFile, outputFile)
+	args := pdf.createArgsTextOnly(formPDFFile, *inputFile, *outputFile)
 
 	// Run PDF Injector
-	err = pdf.runInjector(xfdf.path, args)
+	err = pdf.runInjector(tempFile.path, args)
 	if err != nil {
 		return err
 	}
 
 	// On success, copy the output file to the final destination.
-	err = copyFile(outputFile, destPDFFile)
+	err = copyFile(*outputFile, destPDFFile)
 	if err != nil {
 		return err
 	}
@@ -135,22 +133,22 @@ func (pdf PDFInject) Stamp(stampPDFFile, srcPDFFile string) error {
 	}
 
 	// Create a temporary directory.
-	tmpDir, err := NewTempDir(dirPath, prefixFileName)
+	tmpFile, err := NewTempFile(dirPath, prefixFileName)
 	if err != nil {
 		return err
 	}
 
 	// Remove the temporary directory on defer again.
-	defer tmpDir.Remove()
+	defer tmpFile.Remove()
 
 	// Create the temporary output file path.
-	outputFile := tmpDir.CreateTempOutputFile()
+	outputFile := tmpFile.path
 
 	// Create the pdftk command line arguments.
 	args := pdf.createArgsStampPDF(srcPDFFile, stampPDFFile, outputFile)
 
 	// Run PDF Injector
-	err = pdf.runInjector(tmpDir.path, args)
+	err = pdf.runInjector(tmpFile.path, args)
 	if err != nil {
 		return err
 	}
@@ -232,4 +230,47 @@ func (pdf PDFInject) checkDestFileExist() (string, error) {
 	}
 
 	return destPDFFile, nil
+}
+
+func (pdf PDFInject) generateInputDataFile(form Form) (*string, *string, *TempFile, error){
+
+	var outputFile string
+	var inputFile string
+	switch pdf.inputType {
+	case XFDF:
+		// Create a temporary directory.
+		xfdf, err := NewXFDFGenerator(dirPath, prefixFileName)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		// Create the temporary output file path.
+		outputFile = xfdf.GetTempOutputFile()
+
+		// Create the fdf data file.
+		inputFile, err = xfdf.CreateXFDFFile(form)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		return &outputFile, &inputFile, &xfdf.file, nil
+	case FDF:
+		// Create a temporary directory.
+		fdf, err := NewFDFGenerator(dirPath, prefixFileName)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		// Create the temporary output file path.
+		outputFile = fdf.GetTempOutputFile()
+
+		// Create the fdf data file.
+		inputFile, err = fdf.CreateFDFFile(form)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		return &outputFile, &inputFile, &fdf.file, nil
+	}
+	return nil, nil, nil, errors.New("undefined input file")
 }
