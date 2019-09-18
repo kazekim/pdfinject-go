@@ -1,16 +1,16 @@
+/*
+  GoLang code created by Jirawat Harnsiriwatanakit https://github.com/kazekim
+*/
+
 package pdfinject
 
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 )
-// Form represents fields from the PDF form.
-// define in key value map.
-type Form map[string]interface{}
+
 
 const fdfHeader = `%FDF-1.2
 %,,oe"
@@ -29,40 +29,30 @@ trailer
 %%EOF`
 
 // TempPDFDir manage PDF Inject process
-type TempPDFDir struct {
-	path string
+type FDFGenerator struct {
+	file TempFile
 }
 
-// NewTempDir Create a temporary directory.
-func NewTempDir(dir, prefix string) (*TempPDFDir, error) {
+// NewFDFGenerator Create a FDF Generator.
+func NewFDFGenerator(dir, prefix string) (*FDFGenerator, error) {
 
-	tmpDir, err := ioutil.TempDir(dir, prefix)
+	file, err := NewTempFile(dir, prefix)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create temporary directory: %v", err)
+		return nil, err
 	}
-	return &TempPDFDir{
-		tmpDir,
+	return &FDFGenerator{
+		*file,
 	}, nil
 }
 
 // Remove delete temp directory when finish process
-func (t *TempPDFDir) Remove() {
-	errD := os.RemoveAll(t.path)
-	// Log the error only.
-	if errD != nil {
-		log.Printf("pdfinject: failed to remove temporary directory '%s' again: %v", t.path, errD)
-	}
-}
-
-// CreateTempOutputFile Create a temporary output file
-func (t *TempPDFDir) CreateTempOutputFile() string {
-	file := filepath.Clean(t.path + "/output.pdf")
-	return file
+func (t *FDFGenerator) Remove() {
+	t.file.Remove()
 }
 
 // CreateFDFFile Create a temporary fdf file
-func (t *TempPDFDir) CreateFDFFile(form Form) (string, error) {
-	fdfFile := filepath.Clean(t.path + "/data.fdf")
+func (t *FDFGenerator) CreateFDFFile(form Form) (string, error) {
+	fdfFile := filepath.Clean(t.path() + "/data.fdf")
 	err := t.generateFdfFile(form, fdfFile)
 	if err != nil {
 		return "", fmt.Errorf("failed to create fdf form data file: %v", err)
@@ -71,8 +61,18 @@ func (t *TempPDFDir) CreateFDFFile(form Form) (string, error) {
 	return fdfFile, nil
 }
 
+// path get temp file path
+func (t *FDFGenerator) path() string {
+	return t.file.path
+}
+
+// GetTempOutputFile get temp output file for pdf
+func (t *FDFGenerator) GetTempOutputFile() string {
+	return t.file.GetTempOutputFilePath()
+}
+
 // Generate FDF file with parameters to inject to PDF
-func (t *TempPDFDir) generateFdfFile(form Form, path string) error {
+func (t *FDFGenerator) generateFdfFile(form Form, path string) error {
 	// Create the file.
 	file, err := os.Create(path)
 	if err != nil {

@@ -7,15 +7,9 @@ package pdfinject
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"log"
 	"path/filepath"
 )
-
-// Form represents fields from the PDF form.
-// define in key value map.
-type XFDFForm map[string]interface{}
 
 const xfdfHeader = `<?xml version="1.0" encoding="UTF-8"?>
 <xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
@@ -26,40 +20,30 @@ const xfdfFooter = `</fields>
 
 // TempPDFDir manage PDF Inject process
 type XFDFGenerator struct {
-	path string
+	file TempFile
 }
 
 // NewXFDFGenerator Create a XFDF Generator.
 func NewXFDFGenerator(dir, prefix string) (*XFDFGenerator, error) {
 
-	tmpDir, err := ioutil.TempDir(dir, prefix)
+	file, err := NewTempFile(dir, prefix)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create temporary directory: %v", err)
+		return nil, err
 	}
 	return &XFDFGenerator{
-		tmpDir,
+		*file,
 	}, nil
 }
 
 
 // Remove all temp file when finish process
 func (t *XFDFGenerator) Remove() {
-	errD := os.RemoveAll(t.path)
-	// Log the error only.
-	if errD != nil {
-		log.Printf("pdfinjector: failed to remove temporary directory '%s' again: %v", t.path, errD)
-	}
-}
-
-// CreateTempOutputFile Create a temporary output file
-func (t *XFDFGenerator) CreateTempOutputFile() string {
-	file := filepath.Clean(t.path + "/output.pdf")
-	return file
+	t.file.Remove()
 }
 
 // CreateXFDFFile Create a temporary fdf file
 func (t *XFDFGenerator) CreateXFDFFile(form Form) (string, error) {
-	fdfFile := filepath.Clean(t.path + "/data.xfdf")
+	fdfFile := filepath.Clean(t.path() + "/data.xfdf")
 	err := t.generateXFdfFile(form, fdfFile)
 	if err != nil {
 		return "", fmt.Errorf("failed to create fdf form data file: %v", err)
@@ -68,8 +52,19 @@ func (t *XFDFGenerator) CreateXFDFFile(form Form) (string, error) {
 	return fdfFile, nil
 }
 
+// path get temp file path
+func (t *XFDFGenerator) path() string {
+	return t.file.path
+}
+
+// GetTempOutputFile get temp output file for pdf
+func (t *XFDFGenerator) GetTempOutputFile() string {
+	return t.file.GetTempOutputFilePath()
+}
+
 // Generate XFDF file with parameters to inject to PDF
 func (t *XFDFGenerator) generateXFdfFile(form Form, path string) error {
+
 	// Create the file.
 	file, err := os.Create(path)
 	if err != nil {
