@@ -3,3 +3,10 @@
 */
 
 package pdfinject
+
+const (
+	XFDF     InputType = 0
+	FDF            = 1
+)
+
+type InputType int
