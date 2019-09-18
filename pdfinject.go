@@ -46,38 +46,38 @@ func (pdf PDFInject) SetInputType(in InputType) {
 // Fill specified PDF form fields with the specified form values and export to a filled PDF file.
 // One variadic boolean specifies, whenever to overwrite the destination file if it exists.
 
-func (pdf PDFInject) Fill(form Form, formPDFFile string) error {
+func (pdf PDFInject) Fill(form Form, formPDFFile string) (*string, error) {
 
 	// Check if the form file exists.
 	formPDFFile, err := checkFileExist(formPDFFile)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Check if the form file exists.
 	isExist, err := checkExist(formPDFFile)
 	if err != nil {
-		return err
+		return nil, err
 	}else if !isExist {
-		return fmt.Errorf("PDF file does not exists: '%s'", formPDFFile)
+		return nil, fmt.Errorf("PDF file does not exists: '%s'", formPDFFile)
 	}
 
 	// Check if the dest file exists
 	destPDFFile, err := pdf.checkDestFileExist()
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	// Check if the pdftk utility exists.
 	err = checkPkgExist(pdfFormPkgName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 
 	outputFile, inputFile, tempFile, err := pdf.generateInputDataFile(form)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// Remove the temporary directory on defer again.
 	defer tempFile.Remove()
@@ -88,32 +88,32 @@ func (pdf PDFInject) Fill(form Form, formPDFFile string) error {
 	// Run PDF Injector
 	err = pdf.runInjector(tempFile.path, args)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// On success, copy the output file to the final destination.
 	err = copyFile(*outputFile, destPDFFile)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &destPDFFile, nil
 }
 
-func (pdf PDFInject) FillWithDestFile(form Form, formPDFFile, destPDFFile string) error {
+func (pdf PDFInject) FillWithDestFile(form Form, formPDFFile, destPDFFile string) (*string, error) {
 	pdf.destPDFFile = destPDFFile
 
 	return pdf.Fill(form, formPDFFile)
 }
 
-func (pdf PDFInject) FillModel(model interface{}, formPDFFile string) error {
+func (pdf PDFInject) FillModel(model interface{}, formPDFFile string) (*string, error) {
 
 	form := structToForm(model)
 
 	return pdf.Fill(form, formPDFFile)
 }
 
-func (pdf PDFInject) FillModelWithDestFile(model interface{}, formPDFFile string, destPDFFile string) error {
+func (pdf PDFInject) FillModelWithDestFile(model interface{}, formPDFFile string, destPDFFile string) (*string, error) {
 
 	pdf.destPDFFile = destPDFFile
 	form := structToForm(model)
