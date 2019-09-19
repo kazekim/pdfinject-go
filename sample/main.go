@@ -17,7 +17,7 @@ func main() {
 	}
 
 	pdfInject := pdfinject.New()
-	err := pdfInject.FillWithDestFile(form, "sample.pdf", "filled.pdf")
+	_, err := pdfInject.FillWithDestFile(form, "sample.pdf", "filled.pdf")
 	if err != nil {
 		panic(err)
 	}

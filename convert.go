@@ -5,6 +5,7 @@
 package pdfinject
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -25,8 +26,20 @@ func structToForm(data interface{}) Form {
 			key = tag
 		}
 
-		value := field
+		var value string
+		if st.Type.Kind() == reflect.Bool {
+			if field.Bool() {
+				value = "Yes"
+			}else{
+				value = "No"
+			}
+		}else{
+			value = field.String()
+		}
+
 		form[key] = value
+		fmt.Println(key, " ", value)
 	}
+
 	return form
 }
