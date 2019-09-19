@@ -5,7 +5,6 @@
 package pdfinject
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -38,7 +37,6 @@ func structToForm(data interface{}) Form {
 		}
 
 		form[key] = value
-		fmt.Println(key, " ", value)
 	}
 
 	return form
