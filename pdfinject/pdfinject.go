@@ -12,7 +12,7 @@ const (
 )
 
 type PDFInject struct {
-	form Form
+	form map[string]interface{}
 	destPDFFile string
 	overWrite bool
 	inputType InputType
@@ -46,7 +46,7 @@ func (pdf PDFInject) SetInputType(in InputType) {
 // Fill specified PDF form fields with the specified form values and export to a filled PDF file.
 // One variadic boolean specifies, whenever to overwrite the destination file if it exists.
 
-func (pdf PDFInject) Fill(form Form, formPDFFile string) (*string, error) {
+func (pdf PDFInject) Fill(form map[string]interface{}, formPDFFile string) (*string, error) {
 
 	// Check if the form file exists.
 	formPDFFile, err := checkFileExist(formPDFFile)
@@ -100,7 +100,7 @@ func (pdf PDFInject) Fill(form Form, formPDFFile string) (*string, error) {
 	return &destPDFFile, nil
 }
 
-func (pdf PDFInject) FillWithDestFile(form Form, formPDFFile, destPDFFile string) (*string, error) {
+func (pdf PDFInject) FillWithDestFile(form map[string]interface{}, formPDFFile, destPDFFile string) (*string, error) {
 	pdf.destPDFFile = destPDFFile
 
 	return pdf.Fill(form, formPDFFile)
@@ -247,7 +247,7 @@ func (pdf PDFInject) checkDestFileExist() (string, error) {
 	return destPDFFile, nil
 }
 
-func (pdf PDFInject) generateInputDataFile(form Form) (*string, *string, *TempFile, error){
+func (pdf PDFInject) generateInputDataFile(form map[string]interface{}) (*string, *string, *TempFile, error){
 
 	var outputFile string
 	var inputFile string

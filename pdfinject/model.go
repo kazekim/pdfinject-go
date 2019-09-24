@@ -6,4 +6,4 @@ package pdfinject
 
 // Form represents fields from the PDF form.
 // define in key value map.
-type Form map[string]interface{}
+//type Form map[string]interface{}

@@ -51,7 +51,7 @@ func (t *FDFGenerator) Remove() {
 }
 
 // CreateFDFFile Create a temporary fdf file
-func (t *FDFGenerator) CreateFDFFile(form Form) (string, error) {
+func (t *FDFGenerator) CreateFDFFile(form map[string]interface{}) (string, error) {
 	fdfFile := filepath.Clean(t.path() + "/data.fdf")
 	err := t.generateFdfFile(form, fdfFile)
 	if err != nil {
@@ -72,7 +72,7 @@ func (t *FDFGenerator) GetTempOutputFile() string {
 }
 
 // Generate FDF file with parameters to inject to PDF
-func (t *FDFGenerator) generateFdfFile(form Form, path string) error {
+func (t *FDFGenerator) generateFdfFile(form map[string]interface{}, path string) error {
 	// Create the file.
 	file, err := os.Create(path)
 	if err != nil {

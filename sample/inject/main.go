@@ -1,13 +1,11 @@
 package main
 
-import (
-	"github.com/kazekim/pdfinject-go"
-)
+import pdfinject "../../pdfinject"
 
 func main() {
 
 	// Create the form values.
-	form := pdfinject.Form{
+	form := map[string]interface{}{
 		"location": "Hello",
 		"function": "World",
 		"reason": "Kim",
@@ -17,7 +15,7 @@ func main() {
 	}
 
 	pdfInject := pdfinject.New()
-	_, err := pdfInject.FillWithDestFile(form, "sample.pdf", "filled.pdf")
+	_, err := pdfInject.FillWithDestFile(form, "./sample/inject/sample.pdf", "./sample/inject/filled.pdf")
 	if err != nil {
 		panic(err)
 	}

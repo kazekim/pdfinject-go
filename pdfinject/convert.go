@@ -9,9 +9,9 @@ import (
 	"reflect"
 )
 
-func structToForm(data interface{}) Form {
+func structToForm(data interface{}) map[string]interface{} {
 
-	form := make(Form)
+	form := make(map[string]interface{})
 	v := reflect.ValueOf(data)
 	t := reflect.TypeOf(data)
 

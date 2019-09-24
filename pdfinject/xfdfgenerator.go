@@ -42,7 +42,7 @@ func (t *XFDFGenerator) Remove() {
 }
 
 // CreateXFDFFile Create a temporary fdf file
-func (t *XFDFGenerator) CreateXFDFFile(form Form) (string, error) {
+func (t *XFDFGenerator) CreateXFDFFile(form map[string]interface{}) (string, error) {
 	fdfFile := filepath.Clean(t.path() + "/data.xfdf")
 	err := t.generateXFdfFile(form, fdfFile)
 	if err != nil {
@@ -63,7 +63,7 @@ func (t *XFDFGenerator) GetTempOutputFile() string {
 }
 
 // Generate XFDF file with parameters to inject to PDF
-func (t *XFDFGenerator) generateXFdfFile(form Form, path string) error {
+func (t *XFDFGenerator) generateXFdfFile(form map[string]interface{}, path string) error {
 
 	// Create the file.
 	file, err := os.Create(path)
