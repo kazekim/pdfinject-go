@@ -70,7 +70,9 @@ func (t *XFDFGenerator) generateXFdfFile(form map[string]interface{}, path strin
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// Create a new writer.
 	w := bufio.NewWriter(file)
@@ -79,9 +81,9 @@ func (t *XFDFGenerator) generateXFdfFile(form map[string]interface{}, path strin
 	_, _ = fmt.Fprintln(w, xfdfHeader)
 	// Write the form data.
 	for key, value := range form {
-		fmt.Fprintf(w, "<field name=\"%s\">" +
-			"<value>%s</value>" +
-		"</field>", key, value)
+		_, _ = fmt.Fprintf(w, "<field name=\"%s\">"+
+			"<value>%s</value>"+
+			"</field>", key, value)
 	}
 
 	// Write the fdf footer.

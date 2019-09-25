@@ -103,7 +103,9 @@ func (pdf PDFInject) Fill(form map[string]interface{}, formPDFFile string) (*str
 func (pdf PDFInject) FillWithDestFile(form map[string]interface{}, formPDFFile, destPDFFile string) (*string, error) {
 	pdf.destPDFFile = destPDFFile
 
-	return pdf.Fill(form, formPDFFile)
+	newForm := prepareMap(form)
+
+	return pdf.Fill(*newForm, formPDFFile)
 }
 
 func (pdf PDFInject) FillModel(model interface{}, formPDFFile string) (*string, error) {

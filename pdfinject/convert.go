@@ -7,6 +7,7 @@ package pdfinject
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 func structToForm(data interface{}) map[string]interface{} {
@@ -57,4 +58,41 @@ func structToForm(data interface{}) map[string]interface{} {
 	}
 
 	return form
+}
+
+func convertMapValue(k string, v interface{}, out *map[string]interface{}) {
+	o := *out
+	t := reflect.TypeOf(v)
+	switch t.Kind() {
+	case reflect.Bool:
+		if reflect.ValueOf(v).Bool() {
+			o[k] = "Yes"
+		} else {
+			o[k] = "No"
+		}
+	case reflect.Slice, reflect.Array:
+		s := reflect.ValueOf(v)
+		for i:= 0; i < s.Len(); i++ {
+			si := s.Index(i)
+			if si.Kind() == reflect.Map {
+				for _,key := range si.MapKeys() {
+					convertMapValue(key.String()+strconv.Itoa(i+1),si.MapIndex(key).Interface(),&o)
+				}
+			}
+		}
+	default:
+		o[k] = fmt.Sprint(v)
+	}
+}
+
+func prepareMap(m map[string]interface{}) *map[string]interface{}{
+
+	result := make(map[string]interface{})
+
+	for k,v := range m {
+
+		convertMapValue(k,v,&result)
+	}
+
+	return &result
 }
