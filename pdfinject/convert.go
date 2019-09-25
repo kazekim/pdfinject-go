@@ -73,15 +73,19 @@ func convertMapValue(k string, v interface{}, out *map[string]interface{}) {
 	case reflect.Slice, reflect.Array:
 		s := reflect.ValueOf(v)
 		for i:= 0; i < s.Len(); i++ {
+
 			si := s.Index(i)
-			if si.Kind() == reflect.Map {
-				for _,key := range si.MapKeys() {
-					convertMapValue(key.String()+strconv.Itoa(i+1),si.MapIndex(key).Interface(),&o)
+			sit := reflect.TypeOf(si.Interface())
+			siv := reflect.ValueOf(si.Interface())
+
+			if sit.Kind() == reflect.Map {
+				for _,key := range siv.MapKeys() {
+					convertMapValue(key.String()+strconv.Itoa(i+1),siv.MapIndex(key).Interface(),&o)
 				}
 			}
 		}
 	default:
-		o[k] = fmt.Sprint(v)
+		o[k] = reflect.ValueOf(v).String()
 	}
 }
 
