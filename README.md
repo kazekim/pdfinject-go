@@ -8,13 +8,13 @@ Inspiration from : https://github.com/desertbit/fillpdf
 
 ## Usage:
 
-Define you form with pdfinject.Form (type map[string]interface{})
+Define you form with map[string]interface{}
 
 input your source file name replace in "sample.pdf" and define your output file name replace in "filled.pdf"
 
 ```go
 
-form := pdfinject.Form{
+    form := map[string]interface{}{
 		"location": "Hello",
 		"function": "World",
 		"reason": "Kim",
@@ -31,3 +31,16 @@ form := pdfinject.Form{
 
 ```
 You can see example in sample directory
+
+## Merge PDF Files
+input working directory, output file and input files.
+```go
+	err := pdfinject.MergePDF(
+		"./sample/merge/pdf/",
+		"./out.pdf",
+		"./a1.pdf",
+		"./a2.pdf",
+		"./a3.pdf",
+		"./a4.pdf",
+	)
+```
