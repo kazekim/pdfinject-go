@@ -7,6 +7,7 @@ import (
 
 const (
 	pdfFormPkgName = "pdftk"
+	javaPkgName = "java"
 	dirPath = ""
 	prefixFileName = "pdfinj-"
 )
@@ -74,7 +75,6 @@ func (pdf PDFInject) Fill(form map[string]interface{}, formPDFFile string) (*str
 		return nil, err
 	}
 
-
 	outputFile, inputFile, tempFile, err := pdf.generateInputDataFile(form)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func (pdf PDFInject) Fill(form map[string]interface{}, formPDFFile string) (*str
 	args := pdf.createArgsTextOnly(formPDFFile, *inputFile, *outputFile)
 
 	// Run PDF Injector
-	err = pdf.runInjector(tempFile.path, args)
+	err = pdf.runInjectorWithStd(javaPkgName, tempFile.path, *inputFile, *outputFile, args)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (pdf PDFInject) Stamp(stampPDFFile, srcPDFFile string) error {
 	args := pdf.createArgsStampPDF(srcPDFFile, stampPDFFile, outputFile)
 
 	// Run PDF Injector
-	err = pdf.runInjector(tmpFile.path, args)
+	err = pdf.runInjector(pdfFormPkgName, tmpFile.path, args)
 	if err != nil {
 		return err
 	}
@@ -187,11 +187,17 @@ func (pdf PDFInject) StampWithDestFile(stampPDFFile, srcPDFFile, destPDFFile str
 
 //createArgsTextOnly add text from struct to PDF
 func (pdf PDFInject) createArgsTextOnly(formPDFFile, fdfFile, outputFile string) []string {
+
+	home, err := HomeDirectory()
+	if err != nil {
+		optPath := "/opt"
+		home = &optPath
+	}
 	args := []string{
+		"-jar", *home + "/jar/mcpdf.jar",
 		formPDFFile,
-		"fill_form", fdfFile,
-		"output", outputFile,
-		"need_appearances",
+		"fill_form","-",
+		"output", "-",
 	}
 
 	return args
@@ -209,10 +215,21 @@ func (pdf PDFInject) createArgsStampPDF(srcPDFFile, stampPDFFile, outputFile str
 }
 
 // runInjector Run the pdftk utility.
-func (pdf PDFInject) runInjector(tmpDir string, args []string) error {
+func (pdf PDFInject) runInjector(cmdName string, tmpDir string, args []string) error {
 
-	cmd := NewShellCommand(pdfFormPkgName)
+	cmd := NewShellCommand(cmdName)
 	err := cmd.RunInPath(tmpDir, args...)
+	if err != nil {
+		return fmt.Errorf("pdftk error: %v", err)
+	}
+
+	return nil
+}
+
+func (pdf PDFInject) runInjectorWithStd(cmdName string, tmpDir string, stdInPath string, stdOutPath string, args []string) error {
+
+	cmd := NewShellCommand(cmdName)
+	err := cmd.RunInPathWithStd(tmpDir, stdInPath, stdOutPath, args...)
 	if err != nil {
 		return fmt.Errorf("pdftk error: %v", err)
 	}
